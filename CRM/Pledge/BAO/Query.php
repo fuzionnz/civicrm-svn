@@ -66,12 +66,10 @@ class CRM_Pledge_BAO_Query
             $query->_whereTables['civicrm_pledge'] = 1;
         }
         
-        // get contribution_type
-        if ( CRM_Utils_Array::value( 'pledge_contribution_type', $query->_returnProperties ) ) {
-            $query->_select['pledge_contribution_type']  = "civicrm_contribution_type.name as pledge_contribution_type";
-            $query->_element['pledge_contribution_type'] = 1;
+        if ( CRM_Utils_Array::value( 'pledge_create_date', $query->_returnProperties ) ) {
+            $query->_select['pledge_create_date']  = "civicrm_pledge.create_date as pledge_create_date";
+            $query->_element['pledge_create_date'] = 1;
             $query->_tables['civicrm_pledge'] = 1;
-            $query->_tables['pledge_contribution_type'] = 1;
             $query->_whereTables['civicrm_pledge'] = 1;
         }
         
@@ -229,12 +227,12 @@ class CRM_Pledge_BAO_Query
             foreach ( $pieces as $piece ) { 
                 $value = strtolower(addslashes(trim($piece)));
                 $value = "'%$value%'";
-                $sub[] = " ( contact_b.sort_name LIKE $value )";
+                $sub[] = " ( pledge_contact_b.sort_name LIKE $value )";
             }
             
             $query->_where[$grouping][] = ' ( ' . implode( '  OR ', $sub ) . ' ) '; 
             $query->_qill[$grouping][]  = ts( 'Honor name like - \'%1\'', array( 1 => $name ) );
-            $query->_tables['civicrm_contact_b'] = $query->_whereTables['civicrm_contact_b'] = 1;
+            $query->_tables['pledge_contact_b'] = $query->_whereTables['pledge_contact_b'] = 1;
             $query->_tables['civicrm_pledge'] = $query->_whereTables['civicrm_pledge'] = 1;
             return;
   
@@ -263,7 +261,13 @@ class CRM_Pledge_BAO_Query
 
         case 'pledge_contribution_type':
             $from .= " $side JOIN civicrm_contribution_type ON civicrm_pledge.contribution_type_id = civicrm_contribution_type.id ";
+            break;
+
+        case 'pledge_contact_b':
+            $from .= " $side JOIN civicrm_contact pledge_contact_b ON (civicrm_pledge.honor_contact_id = pledge_contact_b.id )";
+            break;
         }
+
         return $from;
     }
 
@@ -289,7 +293,7 @@ class CRM_Pledge_BAO_Query
                                 'display_name'                => 1,
                                 'pledge_id'                   => 1,
                                 'pledge_amount'               => 1,
-                                'pledge_contribution_type'    => 1,
+                                'pledge_create_date'          => 1,
                                 'pledge_total_paid'           => 1,
                                 'pledge_balance_amount'       => 1,
                                 'pledge_next_pay_date'        => 1,
